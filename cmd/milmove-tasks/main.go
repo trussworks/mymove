@@ -67,6 +67,26 @@ func main() {
 	initPostFileToGEXFlags(postFileToGEXCommand.Flags())
 	root.AddCommand(postFileToGEXCommand)
 
+	testDeadlockCommand := &cobra.Command{
+		Use:          "test-deadlock",
+		Short:        "test deadlock",
+		Long:         "test deadlock response in go",
+		RunE:         testDeadlock,
+		SilenceUsage: true,
+	}
+	initTestDeadlockFlags(testDeadlockCommand.Flags())
+	root.AddCommand(testDeadlockCommand)
+
+	testDeadlockCommand3 := &cobra.Command{
+		Use:          "test-deadlock3",
+		Short:        "test deadlock3",
+		Long:         "test deadlock3 response in go",
+		RunE:         testDeadlock3,
+		SilenceUsage: true,
+	}
+	//initTestDeadlockFlags(testDeadlockCommand.Flags())
+	root.AddCommand(testDeadlockCommand3)
+
 	completionCommand := &cobra.Command{
 		Use:   "completion",
 		Short: "Generates bash completion scripts",
