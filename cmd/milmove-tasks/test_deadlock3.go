@@ -7,11 +7,12 @@ import (
 )
 
 func forceDeadlock3() {
-	fmt.Println("vim-go")
+	defer fmt.Println("def in foreceDeadlock")
 	c := make(chan bool)
-	fmt.Println("vim-go2")
+	fmt.Println("i'm running")
+	//panic("panic - before deadlock")
 	<-c
-	fmt.Println("vim-go3")
+	fmt.Println("i'm done")
 }
 
 // func main() {
@@ -40,12 +41,17 @@ func forceDeadlock3() {
 // 	forceDeadlock()
 // }
 //
+func random() {
+	panic("oops... a panic")
+}
+
 // go run ./cmd/milmove-tasks test-deadlock
 func testDeadlock3(cmd *cobra.Command, args []string) error {
-
+	defer fmt.Println("first defer")
 	fmt.Println("Hello, playground")
 	forceDeadlock3()
-	fmt.Println("done")
+	random()
+	fmt.Println("really all done")
 
 	return nil
 }
