@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { func, PropTypes } from 'prop-types';
+import { Button } from '@trussworks/react-uswds';
 
+import { getIsAlive } from 'services/internalApi';
 import SelectableCard from 'components/Customer/SelectableCard';
 import { setConusStatus } from 'store/onboarding/actions';
 import { selectConusStatus } from 'store/onboarding/selectors';
@@ -47,6 +49,11 @@ export class ConusOrNot extends Component {
               cardText={oconusCardText}
             />
           </SectionWrapper>
+          <div>
+            <Button aria-label="deadlock" className="usa-button" onClick={() => getIsAlive()} type="button">
+              Deadlock?
+            </Button>
+          </div>
         </div>
       </div>
     );

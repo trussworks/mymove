@@ -16,6 +16,7 @@ import (
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/backup_contacts"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/calendar"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/certification"
+	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/dead"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/documents"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/dps_auth"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/duty_stations"
@@ -159,6 +160,11 @@ func configureAPI(api *internaloperations.MymoveAPI) http.Handler {
 	if api.AccesscodeFetchAccessCodeHandler == nil {
 		api.AccesscodeFetchAccessCodeHandler = accesscode.FetchAccessCodeHandlerFunc(func(params accesscode.FetchAccessCodeParams) middleware.Responder {
 			return middleware.NotImplemented("operation accesscode.FetchAccessCode has not yet been implemented")
+		})
+	}
+	if api.DeadForceDeadlockHandler == nil {
+		api.DeadForceDeadlockHandler = dead.ForceDeadlockHandlerFunc(func(params dead.ForceDeadlockParams) middleware.Responder {
+			return middleware.NotImplemented("operation dead.ForceDeadlock has not yet been implemented")
 		})
 	}
 	if api.DpsAuthGetCookieURLHandler == nil {

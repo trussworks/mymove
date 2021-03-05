@@ -330,6 +330,52 @@ func init() {
         }
       }
     },
+    "/deadlock": {
+      "get": {
+        "tags": [
+          "dead"
+        ],
+        "operationId": "forceDeadlock",
+        "responses": {
+          "200": {
+            "description": "checks if there is deadlock or not",
+            "schema": {
+              "type": "object",
+              "required": [
+                "isAlive"
+              ],
+              "properties": {
+                "isValid": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid request"
+          },
+          "401": {
+            "description": "request requires user authentication"
+          },
+          "403": {
+            "description": "user is not authorized"
+          },
+          "404": {
+            "description": "ppm discount not found for provided postal codes and original move date"
+          },
+          "409": {
+            "description": "distance is less than 50 miles (no short haul moves)"
+          },
+          "422": {
+            "description": "cannot process request with given information"
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
     "/documents": {
       "post": {
         "description": "Documents represent a physical artifact such as a scanned document or a PDF file",
@@ -6753,6 +6799,52 @@ func init() {
           },
           "403": {
             "description": "user is not authorized"
+          },
+          "500": {
+            "description": "internal server error"
+          }
+        }
+      }
+    },
+    "/deadlock": {
+      "get": {
+        "tags": [
+          "dead"
+        ],
+        "operationId": "forceDeadlock",
+        "responses": {
+          "200": {
+            "description": "checks if there is deadlock or not",
+            "schema": {
+              "type": "object",
+              "required": [
+                "isAlive"
+              ],
+              "properties": {
+                "isValid": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid request"
+          },
+          "401": {
+            "description": "request requires user authentication"
+          },
+          "403": {
+            "description": "user is not authorized"
+          },
+          "404": {
+            "description": "ppm discount not found for provided postal codes and original move date"
+          },
+          "409": {
+            "description": "distance is less than 50 miles (no short haul moves)"
+          },
+          "422": {
+            "description": "cannot process request with given information"
           },
           "500": {
             "description": "internal server error"

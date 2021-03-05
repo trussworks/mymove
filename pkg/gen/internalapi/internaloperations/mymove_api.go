@@ -24,6 +24,7 @@ import (
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/backup_contacts"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/calendar"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/certification"
+	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/dead"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/documents"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/dps_auth"
 	"github.com/transcom/mymove/pkg/gen/internalapi/internaloperations/duty_stations"
@@ -127,6 +128,9 @@ func NewMymoveAPI(spec *loads.Document) *MymoveAPI {
 		}),
 		AccesscodeFetchAccessCodeHandler: accesscode.FetchAccessCodeHandlerFunc(func(params accesscode.FetchAccessCodeParams) middleware.Responder {
 			return middleware.NotImplemented("operation accesscode.FetchAccessCode has not yet been implemented")
+		}),
+		DeadForceDeadlockHandler: dead.ForceDeadlockHandlerFunc(func(params dead.ForceDeadlockParams) middleware.Responder {
+			return middleware.NotImplemented("operation dead.ForceDeadlock has not yet been implemented")
 		}),
 		DpsAuthGetCookieURLHandler: dps_auth.GetCookieURLHandlerFunc(func(params dps_auth.GetCookieURLParams) middleware.Responder {
 			return middleware.NotImplemented("operation dps_auth.GetCookieURL has not yet been implemented")
@@ -338,6 +342,8 @@ type MymoveAPI struct {
 	UploadsDeleteUploadsHandler uploads.DeleteUploadsHandler
 	// AccesscodeFetchAccessCodeHandler sets the operation handler for the fetch access code operation
 	AccesscodeFetchAccessCodeHandler accesscode.FetchAccessCodeHandler
+	// DeadForceDeadlockHandler sets the operation handler for the force deadlock operation
+	DeadForceDeadlockHandler dead.ForceDeadlockHandler
 	// DpsAuthGetCookieURLHandler sets the operation handler for the get cookie URL operation
 	DpsAuthGetCookieURLHandler dps_auth.GetCookieURLHandler
 	// EntitlementsIndexEntitlementsHandler sets the operation handler for the index entitlements operation
@@ -558,6 +564,9 @@ func (o *MymoveAPI) Validate() error {
 	}
 	if o.AccesscodeFetchAccessCodeHandler == nil {
 		unregistered = append(unregistered, "accesscode.FetchAccessCodeHandler")
+	}
+	if o.DeadForceDeadlockHandler == nil {
+		unregistered = append(unregistered, "dead.ForceDeadlockHandler")
 	}
 	if o.DpsAuthGetCookieURLHandler == nil {
 		unregistered = append(unregistered, "dps_auth.GetCookieURLHandler")
@@ -864,6 +873,10 @@ func (o *MymoveAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/access_codes"] = accesscode.NewFetchAccessCode(o.context, o.AccesscodeFetchAccessCodeHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/deadlock"] = dead.NewForceDeadlock(o.context, o.DeadForceDeadlockHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

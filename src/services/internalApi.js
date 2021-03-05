@@ -27,6 +27,10 @@ export async function makeInternalRequest(operationPath, params = {}, options = 
   return makeSwaggerRequest(client, operationPath, params, options);
 }
 
+export async function getIsAlive(normalize = false) {
+  return makeInternalRequest('dead.forceDeadlock', {}, { normalize });
+}
+
 export async function getLoggedInUser(normalize = true) {
   return makeInternalRequest('users.showLoggedInUser', {}, { normalize });
 }

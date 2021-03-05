@@ -140,6 +140,7 @@ func NewInternalAPI(context handlers.HandlerContext) *internalops.MymoveAPI {
 		fetch.NewListFetcher(builder),
 		fetch.NewFetcher(builder),
 	}
+	internalAPI.DeadForceDeadlockHandler = ForceDeadlockHandler{context}
 
 	return internalAPI
 }
