@@ -6,7 +6,7 @@ import { MoveTaskOrder } from 'pages/Office/MoveTaskOrder/MoveTaskOrder';
 jest.mock('hooks/queries', () => ({
   useMoveTaskOrderQueries: () => {
     return {
-      moveOrders: {
+      orders: {
         1: {
           id: '1',
           originDutyStation: {

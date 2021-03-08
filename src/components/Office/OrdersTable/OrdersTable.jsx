@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import styles from '../MoveDetailTable.module.scss';
 
-import { OrdersInfoShape } from 'types/moveOrder';
+import { OrdersInfoShape } from 'types/order';
 import { formatDate } from 'shared/dates';
 import { departmentIndicatorReadable, ordersTypeReadable, ordersTypeDetailReadable } from 'shared/formatters';
 

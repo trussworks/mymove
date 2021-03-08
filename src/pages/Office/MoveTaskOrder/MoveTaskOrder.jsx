@@ -41,22 +41,17 @@ export const MoveTaskOrder = ({ match, ...props }) => {
   const { moveCode } = match.params;
   const { setUnapprovedShipmentCount } = props;
 
-  // TODO - Do something with moveOrder and moveTaskOrder?
-  const {
-    moveOrders = {},
-    moveTaskOrders,
-    mtoShipments,
-    mtoServiceItems,
-    isLoading,
-    isError,
-  } = useMoveTaskOrderQueries(moveCode);
+  // TODO - Do something with order and moveTaskOrder?
+  const { orders = {}, moveTaskOrders, mtoShipments, mtoServiceItems, isLoading, isError } = useMoveTaskOrderQueries(
+    moveCode,
+  );
 
   let mtoServiceItemsArr;
   if (mtoServiceItems) {
     mtoServiceItemsArr = Object.values(mtoServiceItems);
   }
 
-  const moveOrder = Object.values(moveOrders)?.[0];
+  const order = Object.values(orders)?.[0];
   let moveTaskOrder;
   if (moveTaskOrders) {
     moveTaskOrder = Object.values(moveTaskOrders)?.[0];
@@ -187,7 +182,7 @@ export const MoveTaskOrder = ({ match, ...props }) => {
             (item) => item.status === SERVICE_ITEM_STATUS.REJECTED,
           );
           // eslint-disable-next-line camelcase
-          const dutyStationPostal = { postal_code: moveOrder.destinationDutyStation.address.postal_code };
+          const dutyStationPostal = { postal_code: order.destinationDutyStation.address.postal_code };
           return (
             <ShipmentContainer
               key={mtoShipment.id}
@@ -212,8 +207,8 @@ export const MoveTaskOrder = ({ match, ...props }) => {
               <ShipmentAddresses
                 pickupAddress={mtoShipment?.pickupAddress}
                 destinationAddress={mtoShipment?.destinationAddress || dutyStationPostal}
-                originDutyStation={moveOrder?.originDutyStation?.address}
-                destinationDutyStation={moveOrder?.destinationDutyStation?.address}
+                originDutyStation={order?.originDutyStation?.address}
+                destinationDutyStation={order?.destinationDutyStation?.address}
               />
               <ShipmentWeightDetails
                 estimatedWeight={mtoShipment?.primeEstimatedWeight}
