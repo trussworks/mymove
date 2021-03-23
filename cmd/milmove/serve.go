@@ -193,10 +193,6 @@ func checkServeConfig(v *viper.Viper, logger logger) error {
 		return err
 	}
 
-	if err := cli.CheckDevlocal(v); err != nil {
-		return err
-	}
-
 	if err := cli.CheckRoute(v); err != nil {
 		return err
 	}

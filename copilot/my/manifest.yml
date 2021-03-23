@@ -1,0 +1,102 @@
+# The manifest for the "app" service.
+# Read the full specification for the "Load Balanced Web Service" type at:
+#  https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/
+
+# Your service name will be used in naming your resources like log groups, ECS services, etc.
+name: my
+type: Load Balanced Web Service
+
+# Distribute traffic to your service.
+http:
+  # Requests to this path will be forwarded to your service.
+  # To match all requests you can use the "/" path.
+  path: '/'
+  # You can specify a custom health check path. The default is "/".
+  healthcheck:
+    path: '/health'
+
+# Configuration for your containers and service.
+image:
+  # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/#image-build
+  build: ./Dockerfile.local
+  # Port exposed through your container to route traffic to it.
+  port: 8080
+
+cpu: 256       # Number of CPU units for the task.
+memory: 512    # Amount of memory in MiB used by the task.
+count: 1       # Number of tasks that should be running in your service.
+
+sidecars:
+  redis:
+    image: redis:5.0.6
+    port: 6379
+
+# Optional fields for more advanced use-cases.
+#
+variables:                    # Pass environment variables as key value pairs.%
+      CLIENT_AUTH_SECRET_KEY: "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA4onvsqrDfwJzSYmN6BN9ULPg6YTpJSo4+EqaGscD5Dsh10iN\nB/QWK1PrLap+4W3oa/B3hx51wXwm8TitoapMYg0kYSP+cOTxrOrnM8hzWFDtADiL\nh1D6CNs3Aeh3VWhkULkwfku4633om8vERtlIGcsSc60AvFNymoFP170fyFUOXIur\nRfL8iCSnuXLq++2P/Kmk4XdsMhs5tyIJYyBQTye0oV84/25ElgQjyvqBcJnsdUCw\nQvoAjpXyMm29wE4S8q5ufZ2qHGLjAFB5Yq3Ukzoe1sZIJCph+gVosKQZavSo/vEz\n8je1eqY1LJRKpPRMI+3nLJwsGrcDBcZG9k4QIQIDAQABAoIBAQDIc5FboOpXik2E\n9mhQwF4UePY861R5hEDgwvJVW2BAJWquWg4gyYSMVjc1MzYONvh/+klpkDRWPose\nyy4obM4lvMdCBV1xe8O1ZC2sjmQx83mixmYAGFEGYSLtV0uwkSyimRslxc8c4U5f\n/Q/yOPUpjZ0IKj8KZTR1LpL9rOVgluhlNCFaMKNqJRgIHDbw4iV/rFydxVllW6UW\nCzEVJsXSWywfl9n/T4VjffEpdpgv7z70N7Ya7uG19vthKWQJuRqRHpT3CcXnv/ur\nLS1sTda5BpK3WKOkuWl9lz8tTCyfQTqjoSotoj4g4RMCI/l57brC1Lp4ZzxqHyFx\n7wsNOTJ5AoGBAPPgDF1jmczP5I+f5QGClvg4bLlwmh/aP6E2LQSp1VTMKL4Dv5S9\nw85ZU839GK9wOwSMYV33iIttDfCqwxtvIZ3X0H2Ep433TGaFc9Tu8OsG3amaAdfj\nn6vMmQi8Y9wHt4P4xtckdrLHh72JrD/qkVzglKIgJWF6rWhuKlmxcMwLAoGBAO3N\nPLZv40sGUu0EbNnnRgTXl4yZFwtU0yczf4QFNw0GD0cE3w3Y9q4zR6nHzwrXRhMT\n2XmkqC+0NwvDItHExKS8rEb1+5IsrCsvadW4h144nIFlOaP50ObvqRST3c3udzkU\nfLZjoE7+8mkba14lWshFcYa/+o/1Y/jCQGQgEoQDAoGAQ8j6ptqQXUVLmkAvPwQ1\nQjksvz51GHVpSj3stWcfTLqSeH5COe2lBy39BTxcKCdhwBnk1mF/KoHdZg+Qu4dg\nKKdb5AeDKwqZycU+NOlVPX5jDkkoSgGS2AW+Y5c5imb6s0vquNIBzB95s00Y+4sP\nbGlf5tBYk4etu2EjlFqlp5ECgYBVmaZ8KYSREiKxrQEd4zGCNrUX6FeyPYOQvent\n9Q6fAopnTyqXynzpsg3e4Mz3owxXe7KyJgJgwad69XBIQGNkxYHiPVOkh64mEXgw\nda9MzGYR8gUwsJFxP94GST/zjB6gjm5iHTSsmvtZuIQKrLmkE9NM5Thlr7if6BTT\ntfPUTwKBgQDWqh1dkU4wCF5DiUudXzJEFF1afVltzglvQUNNQreogkZpqVJTDBNH\nykgpT2wQ0PSM4k54CS/sPZq6nAs/9x3JPIOP5qieib5bfKbXYoRtwxjqoA32Y4s0\nb++r7Iqx1PabVbxSBhlIPUMMyEITyiSyqEa68HPoceFPpzERTn0vaQ==\n-----END RSA PRIVATE KEY-----" # dummy private key
+      CSRF_AUTH_KEY: dummykey
+      DB_DEBUG: 1
+      DB_ENV: development
+      DB_HOST: database
+      DB_NAME: dev_db
+      DB_PASSWORD: mysecretpassword
+      DB_PASSWORD_LOW_PRIV: mysecretpassword
+      DB_PORT: 5432
+      DB_REGION: us-west-2
+      DB_RETRY_INTERVAL: 5s
+      DB_SSL_MODE: disable
+      DB_USER: postgres
+      DB_USER_LOW_PRIV: crud
+      DEVLOCAL_AUTH: 1
+      DEVLOCAL_CA: /config/tls/devlocal-ca.pem
+      DOD_CA_PACKAGE: /config/tls/Certificates_PKCS7_v5.6_DoD.der.p7b
+      DPS_AUTH_COOKIE_SECRET_KEY: dummykey
+      DPS_COOKIE_EXPIRES_IN_MINUTES: 1
+      EIA_KEY: db2522a43820268a41a802a16ae9fd26 # dummy key generated with openssl rand -hex 16
+      ENVIRONMENT: test
+      FEATURE_FLAG_ACCESS_CODE: false
+      HERE_MAPS_APP_CODE: dummykey
+      HERE_MAPS_APP_ID: dummykey
+      HERE_MAPS_GEOCODE_ENDPOINT: dummykey
+      HERE_MAPS_ROUTING_ENDPOINT: dummykey
+      HTTP_ADMIN_SERVER_NAME: admin.test2.milmove.sandbox.truss.coffee
+      HTTP_MY_SERVER_NAME: my.test2.milmove.sandbox.truss.coffee
+      HTTP_OFFICE_SERVER_NAME: office.test2.milmove.sandbox.truss.coffee
+      HTTP_ORDERS_SERVER_NAME: orders.test2.milmove.sandbox.truss.coffee
+      AWS_CF_DOMAIN: assets.devlocal.move.mil
+      IWS_RBS_ENABLED: 1
+      IWS_RBS_HOST: dummykey
+      LOCAL_STORAGE_ROOT: /tmp
+      LOCAL_STORAGE_WEB_ROOT: storage
+      LOGIN_GOV_ADMIN_CLIENT_ID: dummykey
+      LOGIN_GOV_CALLBACK_PORT: 443
+      LOGIN_GOV_CALLBACK_PROTOCOL: http
+      LOGIN_GOV_HOSTNAME: idp.int.identitysandbox.gov
+      LOGIN_GOV_MY_CLIENT_ID: dummykey
+      LOGIN_GOV_OFFICE_CLIENT_ID: dummykey
+      LOGIN_GOV_SECRET_KEY: "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA4onvsqrDfwJzSYmN6BN9ULPg6YTpJSo4+EqaGscD5Dsh10iN\nB/QWK1PrLap+4W3oa/B3hx51wXwm8TitoapMYg0kYSP+cOT\nxrOrnM8hzWFDtADiL\nh1D6CNs3Aeh3VWhkULkwfku4633om8vERtlIGcsSc60AvFNymoFP170fyFUOXIur\nRfL8iCSnuXLq++2P/Kmk4XdsMhs5tyIJYyBQTye0oV84/25ElgQjyvqBcJnsdUCw\nQvoAjpXyMm29wE4S8q5ufZ2qHGLjAFB5Yq3Ukzoe1sZIJCph+gVosKQZavSo/vEz\n8je1eqY1LJRKpPRMI+3nLJwsGrcDBcZG9k4QIQIDAQABAoIBAQDIc5FboOpXik2E\n9mhQwF4UePY861R5hEDgwvJVW2BAJWquWg4gyYSMVjc1MzYONvh/+klpkDRWPose\nyy4obM4lvMdCBV1xe8O1ZC2sjmQx83mixmYAGFEGYSLtV0uwkSyimRslxc8c4U5f\n/Q/yOPUpjZ0IKj8KZTR1LpL9rOVgluhlNCFaMKNqJRgIHDbw4iV/rFydxVllW6UW\nCzEVJsXSWywfl9n/T4VjffEpdpgv7z70N7Ya7uG19vthKWQJuRqRHpT3CcXnv/ur\nLS1sTda5BpK3WKOkuWl9lz8tTCyfQTqjoSotoj4g4RMCI/l57brC1Lp4ZzxqHyFx\n7wsNOTJ5AoGBAPPgDF1jmczP5I+f5QGClvg4bLlwmh/aP6E2LQSp1VTMKL4Dv5S9\nw85ZU839GK9wOwSMYV33iIttDfCqwxtvIZ3X0H2Ep433TGaFc9Tu8OsG3amaAdfj\nn6vMmQi8Y9wHt4P4xtckdrLHh72JrD/qkVzglKIgJWF6rWhuKlmxcMwLAoGBAO3N\nPLZv40sGUu0EbNnnRgTXl4yZFwtU0yczf4QFNw0GD0cE3w3Y9q4zR6nHzwrXRhMT\n2XmkqC+0NwvDItHExKS8rEb1+5IsrCsvadW4h144nIFlOaP50ObvqRST3c3udzkU\nfLZjoE7+8mkba14lWshFcYa/+o/1Y/jCQGQgEoQDAoGAQ8j6ptqQXUVLmkAvPwQ1\nQjksvz51GHVpSj3stWcfTLqSeH5COe2lBy39BTxcKCdhwBnk1mF/KoHdZg+Qu4dg\nKKdb5AeDKwqZycU+NOlVPX5jDkkoSgGS2AW+Y5c5imb6s0vquNIBzB95s00Y+4sP\nbGlf5tBYk4etu2EjlFqlp5ECgYBVmaZ8KYSREiKxrQEd4zGCNrUX6FeyPYOQvent\n9Q6fAopnTyqXynzpsg3e4Mz3owxXe7KyJgJgwad69XBIQGNkxYHiPVOkh64mEXgw\nda9MzGYR8gUwsJFxP94GST/zjB6gjm5iHTSsmvtZuIQKrLmkE9NM5Thlr7if6BTT\ntfPUTwKBgQDWqh1dkU4wCF5DiUudXzJEFF1afVltzglvQUNNQreogkZpqVJTDBNH\nykgpT2wQ0PSM4k54CS/sPZq6nAs/9x3JPIOP5qieib5bfKbXYoRtwxjqoA32Y4s0\nb++r7Iqx1PabVbxSBhlIPUMMyEITyiSyqEa68HPoceFPpzERTn0vaQ==\n-----END RSA PRIVATE KEY-----" # dummy key
+      MOVE_MIL_DOD_CA_CERT: "-----BEGIN CERTIFICATE-----\nMIICtzCCAZ+gAwIBAgIJAIKXaB7j2TkKMA0GCSqGSIb3DQEBBQUAMBAxDjAMBgNV\nBAMTBWJsZXJnMB4XDTIxMDMyMzAwMjk0NloXDTMxMDMyMTAwMjk0NlowEDEOMAwG\nA1UEAxMFYmxlcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDiie+y\nqsN/AnNJiY3oE31Qs+DphOklKjj4SpoaxwPkOyHXSI0H9BYrU+stqn7hbehr8HeH\nHnXBfCbxOK2hqkxiDSRhI/5w5PGs6uczyHNYUO0AOIuHUPoI2zcB6HdVaGRQuTB+\nS7jrfeiby8RG2UgZyxJzrQC8U3KagU/XvR/IVQ5ci6tF8vyIJKe5cur77Y/8qaTh\nd2wyGzm3IgljIFBPJ7ShXzj/bkSWBCPK+oFwmex1QLBC+gCOlfIybb3AThLyrm59\nnaocYuMAUHlirdSTOh7WxkgkKmH6BWiwpBlq9Kj+8TPyN7V6pjUslEqk9Ewj7ecs\nnCwatwMFxkb2ThAhAgMBAAGjFDASMBAGA1UdEQQJMAeCBWJsZXJnMA0GCSqGSIb3\nDQEBBQUAA4IBAQDLyfyiUicEtVNN7qfW6lHrcJeaONhTu1dMeqFbfAWnW/er+UFU\nX0C4vAL0A3ur/4Tkeo5sNWfO+5yxfrgUKZUrtSFiLtXb2rSUZHr7LRrVZ3IQQbIS\nRwb0gF0cphNQMF1mnMH8SiQJiVN3LRhHUwan/V9zIV0YdAkLw4Dehi6M3pzB3zCU\nD8kG2Wm5TFIzykO6EjpDXCLZRZx9HTid8gGqnaiPJFcfEY2mh/48lEqc2hq3x7Tl\n+n/StUL0mbGAZIAantyDKjAJC+rYVevL33E0Dxose1K2UvbNkzCdskN55r/C91D0\ngAOVcZciX8j6saSrrg4moJy9Fd8XtYA0DJnZ\n-----END CERTIFICATE-----" #dummy key
+      MOVE_MIL_DOD_TLS_CERT: "-----BEGIN CERTIFICATE-----\nMIICtzCCAZ+gAwIBAgIJAIKXaB7j2TkKMA0GCSqGSIb3DQEBBQUAMBAxDjAMBgNV\nBAMTBWJsZXJnMB4XDTIxMDMyMzAwMjk0NloXDTMxMDMyMTAwMjk0NlowEDEOMAwG\nA1UEAxMFYmxlcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDiie+y\nqsN/AnNJiY3oE31Qs+DphOklKjj4SpoaxwPkOyHXSI0H9BYrU+stqn7hbehr8HeH\nHnXBfCbxOK2hqkxiDSRhI/5w5PGs6uczyHNYUO0AOIuHUPoI2zcB6HdVaGRQuTB+\nS7jrfeiby8RG2UgZyxJzrQC8U3KagU/XvR/IVQ5ci6tF8vyIJKe5cur77Y/8qaTh\nd2wyGzm3IgljIFBPJ7ShXzj/bkSWBCPK+oFwmex1QLBC+gCOlfIybb3AThLyrm59\nnaocYuMAUHlirdSTOh7WxkgkKmH6BWiwpBlq9Kj+8TPyN7V6pjUslEqk9Ewj7ecs\nnCwatwMFxkb2ThAhAgMBAAGjFDASMBAGA1UdEQQJMAeCBWJsZXJnMA0GCSqGSIb3\nDQEBBQUAA4IBAQDLyfyiUicEtVNN7qfW6lHrcJeaONhTu1dMeqFbfAWnW/er+UFU\nX0C4vAL0A3ur/4Tkeo5sNWfO+5yxfrgUKZUrtSFiLtXb2rSUZHr7LRrVZ3IQQbIS\nRwb0gF0cphNQMF1mnMH8SiQJiVN3LRhHUwan/V9zIV0YdAkLw4Dehi6M3pzB3zCU\nD8kG2Wm5TFIzykO6EjpDXCLZRZx9HTid8gGqnaiPJFcfEY2mh/48lEqc2hq3x7Tl\n+n/StUL0mbGAZIAantyDKjAJC+rYVevL33E0Dxose1K2UvbNkzCdskN55r/C91D0\ngAOVcZciX8j6saSrrg4moJy9Fd8XtYA0DJnZ\n-----END CERTIFICATE-----" # dummy key
+      MOVE_MIL_DOD_TLS_KEY: "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA4onvsqrDfwJzSYmN6BN9ULPg6YTpJSo4+EqaGscD5Dsh10iN\nB/QWK1PrLap+4W3oa/B3hx51wXwm8TitoapMYg0kYSP+cOT\nxrOrnM8hzWFDtADiL\nh1D6CNs3Aeh3VWhkULkwfku4633om8vERtlIGcsSc60AvFNymoFP170fyFUOXIur\nRfL8iCSnuXLq++2P/Kmk4XdsMhs5tyIJYyBQTye0oV84/25ElgQjyvqBcJnsdUCw\nQvoAjpXyMm29wE4S8q5ufZ2qHG\nLjAFB5Yq3Ukzoe1sZIJCph+gVosKQZavSo/vEz\n8je1eqY1LJRKpPRMI+3nLJwsGrcDBcZG9k4QIQIDAQABAoIBAQDIc5FboOpXik2E\n9mhQwF4UePY861R5hEDgwvJVW2BAJWquWg4gyYSMVjc1MzYONvh/+klpkDRWPose\nyy4ob\nM4lvMdCBV1xe8O1ZC2sjmQx83mixmYAGFEGYSLtV0uwkSyimRslxc8c4U5f\n/Q/yOPUpjZ0IKj8KZTR1LpL9rOVgluhlNCFaMKNqJRgIHDbw4iV/rFydxVllW6UW\nCzEVJsXSWywfl9n/T4VjffEpdpgv7z70N7Ya7uG19vthKWQJuR\nqRHpT3CcXnv/ur\nLS1sTda5BpK3WKOkuWl9lz8tTCyfQTqjoSotoj4g4RMCI/l57brC1Lp4ZzxqHyFx\n7wsNOTJ5AoGBAPPgDF1jmczP5I+f5QGClvg4bLlwmh/aP6E2LQSp1VTMKL4Dv5S9\nw85ZU839GK9wOwSMYV33iIttDfCqw\nxtvIZ3X0H2Ep433TGaFc9Tu8OsG3amaAdfj\nn6vMmQi8Y9wHt4P4xtckdrLHh72JrD/qkVzglKIgJWF6rWhuKlmxcMwLAoGBAO3N\nPLZv40sGUu0EbNnnRgTXl4yZFwtU0yczf4QFNw0GD0cE3w3Y9q4zR6nHzwrXRhMT\n2XmkqC+0\nNwvDItHExKS8rEb1+5IsrCsvadW4h144nIFlOaP50ObvqRST3c3udzkU\nfLZjoE7+8mkba14lWshFcYa/+o/1Y/jCQGQgEoQDAoGAQ8j6ptqQXUVLmkAvPwQ1\nQjksvz51GHVpSj3stWcfTLqSeH5COe2lBy39BTxcKCdhwBnk1mF/K\noHdZg+Qu4dg\nKKdb5AeDKwqZycU+NOlVPX5jDkkoSgGS2AW+Y5c5imb6s0vquNIBzB95s00Y+4sP\nbGlf5tBYk4etu2EjlFqlp5ECgYBVmaZ8KYSREiKxrQEd4zGCNrUX6FeyPYOQvent\n9Q6fAopnTyqXynzpsg3e4Mz3owxXe7Ky\nJgJgwad69XBIQGNkxYHiPVOkh64mEXgw\nda9MzGYR8gUwsJFxP94GST/zjB6gjm5iHTSsmvtZuIQKrLmkE9NM5Thlr7if6BTT\ntfPUTwKBgQDWqh1dkU4wCF5DiUudXzJEFF1afVltzglvQUNNQreogkZpqVJTDBNH\nykgpT2wQ0PS\nM4k54CS/sPZq6nAs/9x3JPIOP5qieib5bfKbXYoRtwxjqoA32Y4s0\nb++r7Iqx1PabVbxSBhlIPUMMyEITyiSyqEa68HPoceFPpzERTn0vaQ==\n-----END RSA PRIVATE KEY-----" # dummy key
+      MUTUAL_TLS_ENABLED: 0
+      NO_TLS_ENABLED: 1
+      NO_TLS_PORT: 8080
+      PGPASSWORD: mysecretpassword
+      REDIS_HOST: localhost
+      SERVE_ADMIN: true
+      SERVE_API_GHC: true
+      SERVE_API_INTERNAL: true
+      SERVE_API_PRIME: false
+      SERVE_API_SUPPORT: false
+      STORAGE_BACKEND: local
+      TLS_ENABLED: 1
+      TZ: UTC
+
+#secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
+#  GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of the SSM parameter.
+
+# You can override any of the values defined above by environment.
+#environments:
+#  test:
+#    count: 2               # Number of tasks to run for the "test" environment.
