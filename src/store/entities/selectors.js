@@ -1,7 +1,7 @@
 import { createSelector } from 'reselect';
 
 import { profileStates } from 'constants/customerStates';
-import { NULL_UUID } from 'shared/constants';
+import { MOVE_STATUSES, NULL_UUID } from 'shared/constants';
 
 /**
  * Use this file for selecting "slices" of state from Redux and for computed
@@ -137,6 +137,8 @@ export const selectCurrentMove = (state) => {
 
 export const selectMoveIsApproved = createSelector(selectCurrentMove, (move) => move?.status === 'APPROVED');
 
+export const selectMoveIsInDraft = createSelector(selectCurrentMove, (move) => move?.status === MOVE_STATUSES.DRAFT);
+
 export const selectHasCanceledMove = createSelector(selectMovesForLoggedInUser, (moves) =>
   moves.some((m) => m.status === 'CANCELED'),
 );
@@ -182,3 +184,27 @@ export function selectPPMSitEstimate(state) {
 export function selectReimbursementById(state, reimbursementId) {
   return state.entities?.reimbursements?.[`${reimbursementId}`] || null;
 }
+
+export const selectEntitlementsForLoggedInUser = createSelector(
+  selectServiceMemberFromLoggedInUser,
+  selectCurrentOrders,
+  (serviceMember, orders) => {
+    const entitlement = {
+      pro_gear: serviceMember.weight_allotment?.pro_gear_weight,
+      pro_gear_spouse: orders.spouse_has_pro_gear ? serviceMember.weight_allotment?.pro_gear_weight_spouse : 0,
+    };
+
+    if (orders.has_dependents) {
+      entitlement.weight = serviceMember.weight_allotment?.total_weight_self_plus_dependents;
+    } else {
+      entitlement.weight = serviceMember.weight_allotment?.total_weight_self;
+    }
+
+    entitlement.sum = [entitlement.weight, entitlement.pro_gear, entitlement.pro_gear_spouse].reduce(
+      (acc, num) => acc + num,
+      0,
+    );
+
+    return entitlement;
+  },
+);

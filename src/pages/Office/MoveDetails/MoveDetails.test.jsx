@@ -16,13 +16,14 @@ jest.mock('hooks/queries', () => ({
 }));
 
 const setUnapprovedShipmentCount = jest.fn();
+const setUnapprovedServiceItemCount = jest.fn();
 
 const requestedMoveDetailsQuery = {
   move: {
     id: '9c7b255c-2981-4bf8-839f-61c7458e2b4d',
     ordersId: '1',
   },
-  moveOrder: {
+  order: {
     id: '1',
     originDutyStation: {
       address: {
@@ -130,7 +131,7 @@ const requestedMoveDetailsMissingInfoQuery = {
     id: '9c7b255c-2981-4bf8-839f-61c7458e2b4d',
     ordersId: '1',
   },
-  moveOrder: {
+  order: {
     id: '1',
     originDutyStation: {
       address: {
@@ -345,7 +346,10 @@ describe('MoveDetails page', () => {
 
     const wrapper = mount(
       <MockProviders initialEntries={[`/moves/${mockRequestedMoveCode}/details`]}>
-        <MoveDetails setUnapprovedShipmentCount={setUnapprovedShipmentCount} />
+        <MoveDetails
+          setUnapprovedShipmentCount={setUnapprovedShipmentCount}
+          setUnapprovedServiceItemCount={setUnapprovedServiceItemCount}
+        />
       </MockProviders>,
     );
 
@@ -355,10 +359,22 @@ describe('MoveDetails page', () => {
     });
 
     it('renders side navigation for each section', () => {
-      expect(wrapper.containsMatchingElement(<a href="#requested-shipments">Requested shipments</a>)).toBe(true);
-      expect(wrapper.containsMatchingElement(<a href="#orders">Orders</a>)).toBe(true);
-      expect(wrapper.containsMatchingElement(<a href="#allowances">Allowances</a>)).toBe(true);
-      expect(wrapper.containsMatchingElement(<a href="#customer-info">Customer info</a>)).toBe(true);
+      expect(wrapper.find('LeftNav').exists()).toBe(true);
+
+      const navLinks = wrapper.find('LeftNav a');
+
+      expect(navLinks.at(0).contains('Requested shipments')).toBe(true);
+      expect(navLinks.at(0).contains(1)).toBe(true);
+      expect(navLinks.at(0).prop('href')).toBe('#requested-shipments');
+
+      expect(navLinks.at(1).contains('Orders')).toBe(true);
+      expect(navLinks.at(1).prop('href')).toBe('#orders');
+
+      expect(navLinks.at(2).contains('Allowances')).toBe(true);
+      expect(navLinks.at(2).prop('href')).toBe('#allowances');
+
+      expect(navLinks.at(3).contains('Customer info')).toBe(true);
+      expect(navLinks.at(3).prop('href')).toBe('#customer-info');
     });
 
     it('renders the Requested Shipments component', () => {
@@ -377,6 +393,10 @@ describe('MoveDetails page', () => {
       expect(wrapper.find('#customer-info h4').text()).toEqual('Customer info');
     });
 
+    it('renders the requested shipments tag', () => {
+      expect(wrapper.find('span[data-testid="requestedShipmentsTag"]').text()).toEqual('1');
+    });
+
     it('updates the unapproved shipments tag state', () => {
       expect(setUnapprovedShipmentCount).toHaveBeenCalledWith(1);
       expect(setUnapprovedShipmentCount.mock.calls[0][0]).toBe(1);
@@ -388,16 +408,33 @@ describe('MoveDetails page', () => {
 
     const wrapper = mount(
       <MockProviders initialEntries={[`/moves/${mockRequestedMoveCode}/details`]}>
-        <MoveDetails setUnapprovedShipmentCount={setUnapprovedShipmentCount} />
+        <MoveDetails
+          setUnapprovedShipmentCount={setUnapprovedShipmentCount}
+          setUnapprovedServiceItemCount={setUnapprovedServiceItemCount}
+        />
       </MockProviders>,
     );
 
     it('renders side navigation for each section', () => {
-      expect(wrapper.containsMatchingElement(<a href="#approved-shipments">Approved shipments</a>)).toBe(true);
-      expect(wrapper.containsMatchingElement(<a href="#requested-shipments">Requested shipments</a>)).toBe(true);
-      expect(wrapper.containsMatchingElement(<a href="#orders">Orders</a>)).toBe(true);
-      expect(wrapper.containsMatchingElement(<a href="#allowances">Allowances</a>)).toBe(true);
-      expect(wrapper.containsMatchingElement(<a href="#customer-info">Customer info</a>)).toBe(true);
+      expect(wrapper.find('LeftNav').exists()).toBe(true);
+
+      const navLinks = wrapper.find('LeftNav a');
+
+      expect(navLinks.at(0).contains('Requested shipments')).toBe(true);
+      expect(navLinks.at(0).contains(1)).toBe(true);
+      expect(navLinks.at(0).prop('href')).toBe('#requested-shipments');
+
+      expect(navLinks.at(1).contains('Approved shipments')).toBe(true);
+      expect(navLinks.at(1).prop('href')).toBe('#approved-shipments');
+
+      expect(navLinks.at(2).contains('Orders')).toBe(true);
+      expect(navLinks.at(2).prop('href')).toBe('#orders');
+
+      expect(navLinks.at(3).contains('Allowances')).toBe(true);
+      expect(navLinks.at(3).prop('href')).toBe('#allowances');
+
+      expect(navLinks.at(4).contains('Customer info')).toBe(true);
+      expect(navLinks.at(4).prop('href')).toBe('#customer-info');
     });
   });
 
@@ -406,7 +443,10 @@ describe('MoveDetails page', () => {
 
     const wrapper = mount(
       <MockProviders initialEntries={[`/moves/${mockRequestedMoveCode}/details`]}>
-        <MoveDetails setUnapprovedShipmentCount={setUnapprovedShipmentCount} />
+        <MoveDetails
+          setUnapprovedShipmentCount={setUnapprovedShipmentCount}
+          setUnapprovedServiceItemCount={setUnapprovedServiceItemCount}
+        />
       </MockProviders>,
     );
 
@@ -418,16 +458,19 @@ describe('MoveDetails page', () => {
     });
   });
 
-  describe('Left Nav shows error on requested shipment with missing TAC', () => {
+  describe('When required Orders information (like TAC) is missing', () => {
     useMoveDetailsQueries.mockImplementation(() => requestedMoveDetailsMissingInfoQuery);
 
     const wrapper = mount(
       <MockProviders initialEntries={[`/moves/${mockRequestedMoveCode}/details`]}>
-        <MoveDetails setUnapprovedShipmentCount={setUnapprovedShipmentCount} />
+        <MoveDetails
+          setUnapprovedShipmentCount={setUnapprovedShipmentCount}
+          setUnapprovedServiceItemCount={setUnapprovedServiceItemCount}
+        />
       </MockProviders>,
     );
 
-    it('renders side navigation for each section', () => {
+    it('renders an error indicator in the sidebar', () => {
       expect(wrapper.find('a[href="#orders"] span[data-testid="tag"]').exists()).toBe(true);
     });
   });

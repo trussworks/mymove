@@ -85,7 +85,7 @@ func (suite *ModelSuite) TestFetchDataShipmentSummaryWorksheet() {
 		ServiceMemberID: serviceMemberID,
 		ApplicationName: auth.MilApp,
 	}
-	ppm.Move.Submit(time.Now())
+	ppm.Move.Submit()
 	ppm.Move.Approve()
 	// This is the same PPM model as ppm, but this is the one that will be saved by SaveMoveDependencies
 	ppm.Move.PersonallyProcuredMoves[0].Submit(time.Now())
@@ -210,7 +210,7 @@ func (suite *ModelSuite) TestFetchDataShipmentSummaryWorksheetOnlyPPM() {
 		ServiceMemberID: serviceMemberID,
 		ApplicationName: auth.MilApp,
 	}
-	ppm.Move.Submit(time.Now())
+	ppm.Move.Submit()
 	ppm.Move.Approve()
 	// This is the same PPM model as ppm, but this is the one that will be saved by SaveMoveDependencies
 	ppm.Move.PersonallyProcuredMoves[0].Submit(time.Now())
@@ -749,10 +749,10 @@ func (suite *ModelSuite) TestFormatOrdersIssueDate() {
 func (suite *ModelSuite) TestFormatOrdersType() {
 	pcsOrder := models.Order{OrdersType: internalmessages.OrdersTypePERMANENTCHANGEOFSTATION}
 	var unknownOrdersType internalmessages.OrdersType = "UNKNOWN_ORDERS_TYPE"
-	localMoveOrder := models.Order{OrdersType: unknownOrdersType}
+	localOrder := models.Order{OrdersType: unknownOrdersType}
 
 	suite.Equal("PCS", models.FormatOrdersType(pcsOrder))
-	suite.Equal("", models.FormatOrdersType(localMoveOrder))
+	suite.Equal("", models.FormatOrdersType(localOrder))
 }
 
 func (suite *ModelSuite) TestFormatServiceMemberAffiliation() {

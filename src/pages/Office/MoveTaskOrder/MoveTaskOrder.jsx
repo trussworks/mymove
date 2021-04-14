@@ -1,32 +1,36 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { withRouter } from 'react-router-dom';
-import { GridContainer } from '@trussworks/react-uswds';
+import { GridContainer, Tag } from '@trussworks/react-uswds';
 import { queryCache, useMutation } from 'react-query';
+import { connect } from 'react-redux';
 import { func } from 'prop-types';
 import classnames from 'classnames';
 
 import styles from '../TXOMoveInfo/TXOTab.module.scss';
 
-import { MTO_SERVICE_ITEMS } from 'constants/queryKeys';
+import { MTO_SERVICE_ITEMS, MTO_SHIPMENTS } from 'constants/queryKeys';
+import SERVICE_ITEM_STATUSES from 'constants/serviceItems';
+import { MOVE_STATUSES } from 'shared/constants';
+import dimensionTypes from 'constants/dimensionTypes';
+import customerContactTypes from 'constants/customerContactTypes';
+import { mtoShipmentTypes, shipmentStatuses } from 'constants/shipments';
+import { patchMTOServiceItemStatus, updateMTOShipmentStatus } from 'services/ghcApi';
+import { useMoveTaskOrderQueries } from 'hooks/queries';
+import LeftNav from 'components/LeftNav';
 import ShipmentContainer from 'components/Office/ShipmentContainer';
 import ShipmentHeading from 'components/Office/ShipmentHeading';
 import ImportantShipmentDates from 'components/Office/ImportantShipmentDates';
 import RequestedServiceItemsTable from 'components/Office/RequestedServiceItemsTable/RequestedServiceItemsTable';
-import { useMoveTaskOrderQueries } from 'hooks/queries';
 import { MatchShape } from 'types/router';
-import LoadingPlaceholder from 'shared/LoadingPlaceholder';
-import SomethingWentWrong from 'shared/SomethingWentWrong';
 import ShipmentAddresses from 'components/Office/ShipmentAddresses/ShipmentAddresses';
 import RejectServiceItemModal from 'components/Office/RejectServiceItemModal/RejectServiceItemModal';
-import { MOVE_STATUSES } from 'shared/constants';
-import { patchMTOServiceItemStatus } from 'services/ghcApi';
 import ShipmentWeightDetails from 'components/Office/ShipmentWeightDetails/ShipmentWeightDetails';
-import dimensionTypes from 'constants/dimensionTypes';
-import customerContactTypes from 'constants/customerContactTypes';
-import { mtoShipmentTypes, shipmentStatuses } from 'constants/shipments';
-import LeftNav from 'components/LeftNav';
+import { RequestShipmentCancellationModal } from 'components/Office/RequestShipmentCancellationModal/RequestShipmentCancellationModal';
 import { shipmentSectionLabels } from 'content/shipments';
-import SERVICE_ITEM_STATUSES from 'constants/serviceItems';
+import { setFlashMessage } from 'store/flash/actions';
+import FlashGridContainer from 'containers/FlashGridContainer/FlashGridContainer';
+import LoadingPlaceholder from 'shared/LoadingPlaceholder';
+import SomethingWentWrong from 'shared/SomethingWentWrong';
 
 function formatShipmentDate(shipmentDateString) {
   const dateObj = new Date(shipmentDateString);
@@ -43,29 +47,26 @@ function approvedFilter(shipment) {
 
 export const MoveTaskOrder = ({ match, ...props }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [selectedShipment, setSelectedShipment] = useState(undefined);
   const [selectedServiceItem, setSelectedServiceItem] = useState(undefined);
   const [sections, setSections] = useState([]);
   const [activeSection, setActiveSection] = useState('');
+  const [unapprovedServiceItemsForShipment, setUnapprovedServiceItemsForShipment] = useState({});
 
   const { moveCode } = match.params;
-  const { setUnapprovedShipmentCount } = props;
+  const { setUnapprovedShipmentCount, setUnapprovedServiceItemCount, setMessage } = props;
 
-  const {
-    moveOrders = {},
-    moveTaskOrders,
-    mtoShipments,
-    mtoServiceItems,
-    isLoading,
-    isError,
-  } = useMoveTaskOrderQueries(moveCode);
+  const { orders = {}, moveTaskOrders, mtoShipments, mtoServiceItems, isLoading, isError } = useMoveTaskOrderQueries(
+    moveCode,
+  );
 
-  const mtoServiceItemsArr = Object.values(mtoServiceItems || {});
-  const moveOrder = Object.values(moveOrders)?.[0];
+  const order = Object.values(orders)?.[0];
   const moveTaskOrder = Object.values(moveTaskOrders || {})?.[0];
 
   const shipmentServiceItems = useMemo(() => {
     const serviceItemsForShipment = {};
-    mtoServiceItemsArr?.forEach((item) => {
+    mtoServiceItems?.forEach((item) => {
       // We're not interested in basic service items
       if (!item.mtoShipmentID) {
         return;
@@ -91,18 +92,16 @@ export const MoveTaskOrder = ({ match, ...props }) => {
       }
     });
     return serviceItemsForShipment;
-  }, [mtoServiceItemsArr]);
+  }, [mtoServiceItems]);
 
   const [mutateMTOServiceItemStatus] = useMutation(patchMTOServiceItemStatus, {
     onSuccess: (data, variables) => {
       const newMTOServiceItem = data.mtoServiceItems[variables.mtoServiceItemID];
-      queryCache.setQueryData([MTO_SERVICE_ITEMS, variables.moveTaskOrderId, true], {
-        mtoServiceItems: {
-          ...mtoServiceItems,
-          [`${variables.mtoServiceItemID}`]: newMTOServiceItem,
-        },
-      });
-      queryCache.invalidateQueries(MTO_SERVICE_ITEMS, variables.moveTaskOrderId);
+      mtoServiceItems[
+        mtoServiceItems.find((serviceItem) => serviceItem.id === newMTOServiceItem.id)
+      ] = newMTOServiceItem;
+      queryCache.setQueryData([MTO_SERVICE_ITEMS, variables.moveTaskOrderId, false], mtoServiceItems);
+      queryCache.invalidateQueries([MTO_SERVICE_ITEMS, variables.moveTaskOrderId]);
       setIsModalVisible(false);
       setSelectedServiceItem({});
     },
@@ -122,6 +121,51 @@ export const MoveTaskOrder = ({ match, ...props }) => {
     },
   });
 
+  const [mutateMTOShipmentStatus] = useMutation(updateMTOShipmentStatus, {
+    onSuccess: (data, variables) => {
+      const updatedMTOShipment = data.mtoShipments[variables.shipmentID];
+      // Update mtoShipments with our updated status and set query data to match
+      mtoShipments[mtoShipments.findIndex((shipment) => shipment.id === updatedMTOShipment.id)] = updatedMTOShipment;
+      queryCache.setQueryData([MTO_SHIPMENTS, updatedMTOShipment.moveTaskOrderID, false], mtoShipments);
+      // InvalidateQuery tells other components using this data that they need to re-fetch
+      // This allows the requestCancellation button to update immediately
+      queryCache.invalidateQueries([MTO_SHIPMENTS, variables.moveTaskOrderID]);
+
+      setIsCancelModalVisible(false);
+      // Must set FlashMesage after hiding the modal, since FlashMessage will disappear when focus changes
+      setMessage(
+        `MSG_CANCEL_SUCCESS_${variables.shipmentID}`,
+        'success',
+        'The request to cancel that shipment has been sent to the movers.',
+        '',
+        true,
+      );
+    },
+    onError: (error) => {
+      const errorMsg = error?.response?.body;
+      // TODO: Handle error some how
+      // RA Summary: eslint: no-console - System Information Leak: External
+      // RA: The linter flags any use of console.
+      // RA: This console displays an error message from unsuccessful mutation.
+      // RA: TODO: As indicated, this error needs to be handled and needs further investigation.
+      // RA: POAM story here: https://dp3.atlassian.net/browse/MB-5597
+      // RA Developer Status: Known Issue
+      // RA Validator Status: Known Issue
+      // RA Modified Severity: CAT II
+      // eslint-disable-next-line no-console
+      console.log(errorMsg);
+    },
+  });
+
+  const handleUpdateMTOShipmentStatus = (moveTaskOrderID, mtoShipmentID, eTag) => {
+    mutateMTOShipmentStatus({
+      moveTaskOrderID,
+      shipmentID: mtoShipmentID,
+      shipmentStatus: shipmentStatuses.CANCELLATION_REQUESTED,
+      ifMatchETag: eTag,
+    });
+  };
+
   const handleUpdateMTOServiceItemStatus = (mtoServiceItemID, mtoShipmentID, status, rejectionReason) => {
     const mtoServiceItemForRequest = shipmentServiceItems[`${mtoShipmentID}`]?.find((s) => s.id === mtoServiceItemID);
 
@@ -135,6 +179,22 @@ export const MoveTaskOrder = ({ match, ...props }) => {
   };
 
   useEffect(() => {
+    let serviceItemCount = 0;
+    const serviceItemsCountForShipment = {};
+    mtoShipments?.forEach((mtoShipment) => {
+      if (mtoShipment.status === shipmentStatuses.APPROVED) {
+        const requestedServiceItemCount = shipmentServiceItems[`${mtoShipment.id}`]?.filter(
+          (serviceItem) => serviceItem.status === SERVICE_ITEM_STATUSES.SUBMITTED,
+        )?.length;
+        serviceItemCount += requestedServiceItemCount || 0;
+        serviceItemsCountForShipment[`${mtoShipment.id}`] = requestedServiceItemCount;
+      }
+    });
+    setUnapprovedServiceItemCount(serviceItemCount);
+    setUnapprovedServiceItemsForShipment(serviceItemsCountForShipment);
+  }, [mtoShipments, shipmentServiceItems, setUnapprovedServiceItemCount]);
+
+  useEffect(() => {
     if (mtoShipments) {
       const shipmentCount = mtoShipments?.length
         ? mtoShipments.filter((shipment) => shipment.status === shipmentStatuses.SUBMITTED).length
@@ -146,7 +206,10 @@ export const MoveTaskOrder = ({ match, ...props }) => {
   useEffect(() => {
     const shipmentSections = [];
     mtoShipments?.forEach((shipment) => {
-      if (shipment.status === shipmentStatuses.APPROVED) {
+      if (
+        shipment.status === shipmentStatuses.APPROVED ||
+        shipment.status === shipmentStatuses.CANCELLATION_REQUESTED
+      ) {
         shipmentSections.push({
           id: shipment.id,
           label: shipmentSectionLabels[`${shipment.shipmentType}`] || shipment.shipmentType,
@@ -188,6 +251,11 @@ export const MoveTaskOrder = ({ match, ...props }) => {
     setIsModalVisible(true);
   };
 
+  const handleShowCancellationModal = (mtoShipment) => {
+    setSelectedShipment(mtoShipment);
+    setIsCancelModalVisible(true);
+  };
+
   if (isLoading) return <LoadingPlaceholder />;
   if (isError) return <SomethingWentWrong />;
 
@@ -214,17 +282,27 @@ export const MoveTaskOrder = ({ match, ...props }) => {
             const classes = classnames({ active: s.id === activeSection });
             return (
               <a key={`sidenav_${s.id}`} href={`#shipment-${s.id}`} className={classes}>
-                {s.label}
+                {s.label}{' '}
+                {unapprovedServiceItemsForShipment[`${s.id}`] > 0 && (
+                  <Tag>{unapprovedServiceItemsForShipment[`${s.id}`]}</Tag>
+                )}
               </a>
             );
           })}
         </LeftNav>
-        <GridContainer className={styles.gridContainer} data-testid="too-shipment-container">
+        <FlashGridContainer className={styles.gridContainer} data-testid="too-shipment-container">
           {isModalVisible && (
             <RejectServiceItemModal
               serviceItem={selectedServiceItem}
               onSubmit={handleUpdateMTOServiceItemStatus}
               onClose={setIsModalVisible}
+            />
+          )}
+          {isCancelModalVisible && (
+            <RequestShipmentCancellationModal
+              shipmentInfo={selectedShipment}
+              onClose={setIsCancelModalVisible}
+              onSubmit={handleUpdateMTOShipmentStatus}
             />
           )}
           <div className={styles.pageHeader}>
@@ -241,6 +319,7 @@ export const MoveTaskOrder = ({ match, ...props }) => {
             ) {
               return false;
             }
+
             const serviceItemsForShipment = shipmentServiceItems[`${mtoShipment.id}`];
             const requestedServiceItems = serviceItemsForShipment?.filter(
               (item) => item.status === SERVICE_ITEM_STATUSES.SUBMITTED,
@@ -252,66 +331,74 @@ export const MoveTaskOrder = ({ match, ...props }) => {
               (item) => item.status === SERVICE_ITEM_STATUSES.REJECTED,
             );
             // eslint-disable-next-line camelcase
-            const dutyStationPostal = { postal_code: moveOrder.destinationDutyStation.address.postal_code };
+            const dutyStationPostal = { postal_code: order.destinationDutyStation.address.postal_code };
             const { pickupAddress, destinationAddress } = mtoShipment;
             const formattedScheduledPickup = formatShipmentDate(mtoShipment.scheduledPickupDate);
+
             return (
-              <div id={`shipment-${mtoShipment.id}`} key={mtoShipment.id}>
-                <ShipmentContainer shipmentType={mtoShipment.shipmentType} className={styles.shipmentCard}>
-                  <ShipmentHeading
-                    shipmentInfo={{
-                      shipmentType: mtoShipmentTypes[mtoShipment.shipmentType],
-                      originCity: pickupAddress?.city,
-                      originState: pickupAddress?.state,
-                      originPostalCode: pickupAddress?.postal_code,
-                      destinationAddress: destinationAddress || dutyStationPostal,
-                      scheduledPickupDate: formattedScheduledPickup,
-                      shipmentStatus: mtoShipment.status,
-                    }}
+              <ShipmentContainer
+                id={`shipment-${mtoShipment.id}`}
+                key={mtoShipment.id}
+                shipmentType={mtoShipment.shipmentType}
+                className={styles.shipmentCard}
+              >
+                <ShipmentHeading
+                  shipmentInfo={{
+                    shipmentID: mtoShipment.id,
+                    shipmentType: mtoShipmentTypes[mtoShipment.shipmentType],
+                    originCity: pickupAddress?.city,
+                    originState: pickupAddress?.state,
+                    originPostalCode: pickupAddress?.postal_code,
+                    destinationAddress: destinationAddress || dutyStationPostal,
+                    scheduledPickupDate: formattedScheduledPickup,
+                    shipmentStatus: mtoShipment.status,
+                    ifMatchEtag: mtoShipment.eTag,
+                    moveTaskOrderID: mtoShipment.moveTaskOrderID,
+                  }}
+                  handleShowCancellationModal={handleShowCancellationModal}
+                />
+                <ImportantShipmentDates
+                  requestedPickupDate={formatShipmentDate(mtoShipment.requestedPickupDate)}
+                  scheduledPickupDate={formattedScheduledPickup}
+                />
+                <ShipmentAddresses
+                  pickupAddress={pickupAddress}
+                  destinationAddress={destinationAddress || dutyStationPostal}
+                  originDutyStation={order.originDutyStation?.address}
+                  destinationDutyStation={order.destinationDutyStation?.address}
+                />
+                <ShipmentWeightDetails
+                  estimatedWeight={mtoShipment.primeEstimatedWeight}
+                  actualWeight={mtoShipment.primeActualWeight}
+                />
+                {requestedServiceItems?.length > 0 && (
+                  <RequestedServiceItemsTable
+                    serviceItems={requestedServiceItems}
+                    handleUpdateMTOServiceItemStatus={handleUpdateMTOServiceItemStatus}
+                    handleShowRejectionDialog={handleShowRejectionDialog}
+                    statusForTableType={SERVICE_ITEM_STATUSES.SUBMITTED}
                   />
-                  <ImportantShipmentDates
-                    requestedPickupDate={formatShipmentDate(mtoShipment.requestedPickupDate)}
-                    scheduledPickupDate={formattedScheduledPickup}
+                )}
+                {approvedServiceItems?.length > 0 && (
+                  <RequestedServiceItemsTable
+                    serviceItems={approvedServiceItems}
+                    handleUpdateMTOServiceItemStatus={handleUpdateMTOServiceItemStatus}
+                    handleShowRejectionDialog={handleShowRejectionDialog}
+                    statusForTableType={SERVICE_ITEM_STATUSES.APPROVED}
                   />
-                  <ShipmentAddresses
-                    pickupAddress={pickupAddress}
-                    destinationAddress={destinationAddress || dutyStationPostal}
-                    originDutyStation={moveOrder.originDutyStation?.address}
-                    destinationDutyStation={moveOrder.destinationDutyStation?.address}
+                )}
+                {rejectedServiceItems?.length > 0 && (
+                  <RequestedServiceItemsTable
+                    serviceItems={rejectedServiceItems}
+                    handleUpdateMTOServiceItemStatus={handleUpdateMTOServiceItemStatus}
+                    handleShowRejectionDialog={handleShowRejectionDialog}
+                    statusForTableType={SERVICE_ITEM_STATUSES.REJECTED}
                   />
-                  <ShipmentWeightDetails
-                    estimatedWeight={mtoShipment.primeEstimatedWeight}
-                    actualWeight={mtoShipment.primeActualWeight}
-                  />
-                  {requestedServiceItems?.length > 0 && (
-                    <RequestedServiceItemsTable
-                      serviceItems={requestedServiceItems}
-                      handleUpdateMTOServiceItemStatus={handleUpdateMTOServiceItemStatus}
-                      handleShowRejectionDialog={handleShowRejectionDialog}
-                      statusForTableType={SERVICE_ITEM_STATUSES.SUBMITTED}
-                    />
-                  )}
-                  {approvedServiceItems?.length > 0 && (
-                    <RequestedServiceItemsTable
-                      serviceItems={approvedServiceItems}
-                      handleUpdateMTOServiceItemStatus={handleUpdateMTOServiceItemStatus}
-                      handleShowRejectionDialog={handleShowRejectionDialog}
-                      statusForTableType={SERVICE_ITEM_STATUSES.APPROVED}
-                    />
-                  )}
-                  {rejectedServiceItems?.length > 0 && (
-                    <RequestedServiceItemsTable
-                      serviceItems={rejectedServiceItems}
-                      handleUpdateMTOServiceItemStatus={handleUpdateMTOServiceItemStatus}
-                      handleShowRejectionDialog={handleShowRejectionDialog}
-                      statusForTableType={SERVICE_ITEM_STATUSES.REJECTED}
-                    />
-                  )}
-                </ShipmentContainer>
-              </div>
+                )}
+              </ShipmentContainer>
             );
           })}
-        </GridContainer>
+        </FlashGridContainer>
       </div>
     </div>
   );
@@ -320,6 +407,12 @@ export const MoveTaskOrder = ({ match, ...props }) => {
 MoveTaskOrder.propTypes = {
   match: MatchShape.isRequired,
   setUnapprovedShipmentCount: func.isRequired,
+  setUnapprovedServiceItemCount: func.isRequired,
+  setMessage: func.isRequired,
 };
 
-export default withRouter(MoveTaskOrder);
+const mapDispatchToProps = {
+  setMessage: setFlashMessage,
+};
+
+export default withRouter(connect(() => ({}), mapDispatchToProps)(MoveTaskOrder));

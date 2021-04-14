@@ -41,10 +41,6 @@
     @include u-margin-top('205');
   }
 
-  :global(.usa-form-group--error) {
-    @include u-margin(0);
-  }
-
   :global(.usa-label) {
     color: $base-darker;
     font-size: 13px;
@@ -105,6 +101,11 @@
 
   :global(.usa-form-group:first-of-type .usa-label) {
     @include u-margin-top('105');
+  }
+
+  > :global(.usa-form-group:first-child .usa-label),
+  > :global(.usa-form-group--error:first-child) {
+    @include u-margin-top(0);
   }
 
   @include at-media('tablet') {

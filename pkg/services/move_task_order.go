@@ -34,7 +34,7 @@ type MoveTaskOrderCreator interface {
 //go:generate mockery -name MoveTaskOrderFetcher
 type MoveTaskOrderFetcher interface {
 	FetchMoveTaskOrder(moveTaskOrderID uuid.UUID, searchParams *FetchMoveTaskOrderParams) (*models.Move, error)
-	ListMoveTaskOrders(moveOrderID uuid.UUID, searchParams *ListMoveTaskOrderParams) ([]models.Move, error)
+	ListMoveTaskOrders(orderID uuid.UUID, searchParams *ListMoveTaskOrderParams) ([]models.Move, error)
 	ListAllMoveTaskOrders(searchParams *ListMoveTaskOrderParams) (models.Moves, error)
 }
 
@@ -43,6 +43,7 @@ type MoveTaskOrderFetcher interface {
 type MoveTaskOrderUpdater interface {
 	MakeAvailableToPrime(moveTaskOrderID uuid.UUID, eTag string, includeServiceCodeMS bool, includeServiceCodeCS bool) (*models.Move, error)
 	UpdatePostCounselingInfo(moveTaskOrderID uuid.UUID, body movetaskorderops.UpdateMTOPostCounselingInformationBody, eTag string) (*models.Move, error)
+	UpdateStatusServiceCounselingCompleted(moveTaskOrderID uuid.UUID, eTag string) (*models.Move, error)
 	ShowHide(moveTaskOrderID uuid.UUID, show *bool) (*models.Move, error)
 }
 

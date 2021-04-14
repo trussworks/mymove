@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -10,6 +9,7 @@ describe('SubmitMoveForm component', () => {
     onSubmit: jest.fn(),
     onPrint: jest.fn(),
     onBack: jest.fn(),
+    initialValues: { signature: '', date: '2021-01-20' },
   };
 
   it('renders the signature and date inputs', () => {

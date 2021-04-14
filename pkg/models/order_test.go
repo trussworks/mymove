@@ -27,6 +27,103 @@ func (suite *ModelSuite) TestBasicOrderInstantiation() {
 	suite.verifyValidationErrors(order, expErrors)
 }
 
+func (suite *ModelSuite) TestTacNotNilAfterSubmission() {
+	move := testdatagen.MakeDefaultMove(suite.DB())
+	order := move.Orders
+	order.TAC = nil
+	err := move.Submit()
+	if err != nil {
+		suite.T().Fatal("Should transition.")
+	}
+	suite.MustSave(&move)
+	err = suite.DB().Load(&order, "Moves")
+	suite.NoError(err)
+
+	expErrors := map[string][]string{
+		"transportation_accounting_code": {"TransportationAccountingCode cannot be blank."},
+	}
+
+	suite.verifyValidationErrors(&order, expErrors)
+}
+
+func (suite *ModelSuite) TestOrdersNumberPresenceAfterSubmission() {
+	invalidCases := []struct {
+		desc  string
+		value *string
+	}{
+		{"EmptyString", swag.String("")},
+		{"Nil", nil},
+	}
+	for _, invalidCase := range invalidCases {
+		move := testdatagen.MakeDefaultMove(suite.DB())
+		order := move.Orders
+		order.OrdersNumber = invalidCase.value
+		err := move.Submit()
+		if err != nil {
+			suite.T().Fatal("Should transition.")
+		}
+		suite.MustSave(&move)
+		err = suite.DB().Load(&order, "Moves")
+		suite.NoError(err)
+
+		expErrors := map[string][]string{
+			"orders_number": {"OrdersNumber cannot be blank."},
+		}
+
+		suite.verifyValidationErrors(&order, expErrors)
+	}
+}
+
+func (suite *ModelSuite) TestOrdersTypeDetailPresenceAfterSubmission() {
+	emptyString := internalmessages.OrdersTypeDetail("")
+
+	invalidCases := []struct {
+		desc  string
+		value *internalmessages.OrdersTypeDetail
+	}{
+		{"EmptyString", &emptyString},
+		{"Nil", nil},
+	}
+	for _, invalidCase := range invalidCases {
+		move := testdatagen.MakeDefaultMove(suite.DB())
+		order := move.Orders
+
+		order.OrdersTypeDetail = invalidCase.value
+		err := move.Submit()
+		if err != nil {
+			suite.T().Fatal("Should transition.")
+		}
+		suite.MustSave(&move)
+		err = suite.DB().Load(&order, "Moves")
+		suite.NoError(err)
+
+		expErrors := map[string][]string{
+			"orders_type_detail": {"OrdersTypeDetail cannot be blank."},
+		}
+
+		suite.verifyValidationErrors(&order, expErrors)
+	}
+}
+
+func (suite *ModelSuite) TestDepartmentIndicatorNotNilAfterSubmission() {
+	move := testdatagen.MakeDefaultMove(suite.DB())
+	order := move.Orders
+	order.DepartmentIndicator = nil
+	err := move.Submit()
+	if err != nil {
+		suite.T().Fatal("Should transition.")
+	}
+	suite.MustSave(&move)
+	err = suite.DB().Load(&order, "Moves")
+	suite.NoError(err)
+
+	expErrors := map[string][]string{
+		"department_indicator": {"DepartmentIndicator cannot be blank."},
+	}
+
+	suite.verifyValidationErrors(&order, expErrors)
+}
+
 func (suite *ModelSuite) TestFetchOrderForUser() {
 
 	serviceMember1 := testdatagen.MakeDefaultServiceMember(suite.DB())
@@ -246,7 +343,7 @@ func (suite *ModelSuite) TestCanceledMoveCancelsOrder() {
 	move.Orders = orders
 	suite.MustSave(move)
 
-	err = move.Submit(time.Now())
+	err = move.Submit()
 	suite.NoError(err)
 
 	reason := "Mistaken identity"
